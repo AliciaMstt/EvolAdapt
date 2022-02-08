@@ -464,26 +464,16 @@ Nota también que si abres RStudio clickeando su ícono, tu WD por default será
 
 
 **Ejercicio:**
-Carga en R el archivo `Prac_Uni1/maices/meta/maizteocintle_SNP50k_meta_extended.txt` y ponlo en un objeto de R llamado meta_maiz.
+Descarga los datos de este repositorio de datos:
 
- 
-## Manipulación y limpieza de datos en R
+Arteaga, María Clara et al. (2015), Data from: Genomic variation in recently collected maize landraces from Mexico, Dryad, Dataset, https://doi.org/10.5061/dryad.4t20n
 
-`dplyr` es un paquete super útil para hacer operaciones de transformación de datos. Vamos a ver su [Data Transformation Cheat Sheet](https://raw.githubusercontent.com/rstudio/cheatsheets/main/data-transformation.pdf) para aprender sus comandos principales.
-
-Puedes ver más acordenos parecidos en [este link](https://www.rstudio.com/resources/cheatsheets/)
-
-
-La manipulación y la limpieza da datos muchas veces es necesaria antes de poner hacer análisis en R. Para aprender más, puedes revisar estas notas:
-
-* [Reestructura de datos y el principio de los datos limpios](Limpieza_de_datos.Rmd).
-
-* [Estrategia divide-aplica-combina](Divide-aplica-combina.Rmd).
+Lee la documentación, encuentra dónde está guardado el archivo `maizteocintle_SNP50k_meta_extended.txt` y **ábrelo en R** guardándolo en un data frame llamado `maíces`.
 
 
 ## Graficar en R
 
-Los apuntes de esta sección están en [Graficar en R](Graficar_en_R.html) (código y gráficas) y [Graficar en R](Graficar_en_R.Rmd) (sólo código)
+Los apuntes de esta sección están en [Graficar en R](Graficar_en_R) (código y gráficas) y [Graficar en R](Graficar_en_R.Rmd) (sólo código)
 
 
 
