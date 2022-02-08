@@ -12,4 +12,4 @@ Notas de este repositorio:
 * [Introducción a la programación y a R](Unidad1_Intro/Unidad1_Intro_programacion.md)
 * Tipos de objetos base de R: [versión html](Unidad1_Intro/Tipos_objetos_baseR) y [versión código Rmd](Tipos_objetos_baseR.Rmd)
 * Graficar en R: [versión html](Unidad1_Intro/Graficar_en_R) y  [versión código Rmd](Unidad1_Intro/Graficar_en_R.Rmd)
-* [Bash básico](Bash_basico)
+* [Bash básico](Unidad1_Intro/Bash_basico)
