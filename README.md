@@ -4,3 +4,7 @@ Este repositorio contiene notas sobre herramientas bioinformáticas para realiza
 
 Aunque estos apuntes contienen una introducción a la bioinformática, este repositorio **no** es un curso de bioinformática, sino un espacio para poner en práctica la discusión de artículos de evolución molecular adaptativa a través de reproducir sus análisis bioinformáticos. Para una introducción a la bioinformática ver las notas del repositorio [Introducción a la bioinformática e investigación reproducible](github.com/AliciaMstt/BioinfinvRepro).
 
+## Contenido
+
+### 1 Introducción a la bioinformática
+
