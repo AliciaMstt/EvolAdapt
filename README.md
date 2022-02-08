@@ -10,4 +10,4 @@ Aunque estos apuntes contienen una introducción a la bioinformática, este repo
 
 Notas:
 
-* [Introducción a la programación y a R](Unidad1_Intro_programacion.md)
+* [Introducción a la programación y a R](Unidad1_Intro/Unidad1_Intro_programacion.md)
