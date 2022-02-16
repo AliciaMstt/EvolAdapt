@@ -1,0 +1,148 @@
+---
+title: "Ejercico de exploración de datos"
+output: html_document
+---
+
+Una vez que tengamos nuestros datos cargados en R, *siempre* es buena idea explorarlos para (1) ver que se hayan cargado bien y completos (e.g. que estén todas las filas y columnas que esperamos) y (2) revisar la distribución de los valores para asegurarnos no hayan valores no esperados (e.g. peso de 2015 kg en una persona, que probablemente es un error y debiera ser 20.15 kg). 
+
+Como ejercicio examinaremos unos datos que provienen del estudio de Yanai & Lercher (2020), donde se examina el índice de masa corporal (bmi por sus siglas en inglés) de hombres y mujeres y la cantidad de pasos que dan en un día. Puedes descargar el archivo de este ejemplo [aquí](Yanai_Lercher.txt). Guarda dicho archivo en algún directorio, que también sea el wd del script donde hagas este ejercicio.
+
+Vamos primero a leer los datos:
+```{r}
+bmi_datos<-read.delim("Yanai_Lercher.txt")
+```
+
+En RStudio podemos darnos una idea de cómo son nuestros datos buscando el obejto que acabamos de crear en la pestaña del Enviroment. También podemos darle click al objeto, o correr la  función `View(bmi_datos)` para revisarlos en una ventanita tipo Excel. 
+
+Lo anterior es útil para darnos una idea rápida, pero "no se queda escrito" si hacemos un notebook de nuestro script. Para lograr esto entonces podemos utilizar una serie de funciones útiles para describir los datos:
+
+Ver las primeras filas:
+```{r}
+head(bmi_datos)
+```
+
+Ver las últimas filas:
+```{r}
+tail(bmi_datos)
+```
+
+Una forma rápida de ver cuántas filas y columnas tenemos es con las funciones con los creativos nombres de:
+
+```{r}
+nrow(bmi_datos)
+ncol(bmi_datos)
+```
+
+`str()` es una función muy útil pues nos permite ver qué clase de objeto es, y un pequeño resumen de su contenido:
+```{r}
+str(bmi_datos)
+```
+
+Del output anterior podemos notar que el ID está guardado como un número entero, pero como es un identificador (etiqueta que distingue a cada participante del estudio) y no un número (no tiene sentido sacar el promedio de los IDs...), podemos mejor convertirlo a caracter:
+
+```{r}
+bmi_datos$ID<-as.character(bmi_datos$ID)
+```
+
+Y revisar el resultado:
+
+```{r}
+str(bmi_datos)
+```
+
+A mi me gusta siempre revisar el valor mínimo y máximo de las variables numéricas, pues es un buen filtro para encontrar datos raros:
+
+```{r}
+# min y max de los pasos
+min(bmi_datos$steps)
+max(bmi_datos$steps)
+
+# min y max del bmi
+min(bmi_datos$bmi)
+max(bmi_datos$bmi)
+```
+
+Con los datos tipo factor podemos hacer una pequeña tabla para ver el n de cada level, por ejemplo con los datos de género:
+```{r}
+table(bmi_datos$gender)
+```
+
+O simplemente podemos hacer todo lo anterior con la función `summary()`, que nos da un resumen estadístico de los datos:
+```{r}
+summary(bmi_datos)
+```
+
+Si tengo grupos, me gusta ver un resumen de los datos dentro de cada uno. Para esto podemos usar la misma función, pero especificiando un subset de los datos
+
+```{r}
+# subset de datos de los hombres
+bmi_hombres<-bmi_datos[bmi_datos$gender=="male", ] # en los corchetes, lo que está antes de la coma son las filas y después las columnas. Entonces le estamos diciendo a R dame las filas donde gender = male, y todas las columnas (no hay nada después de la comna, y nada es todo).
+
+# summary de mi nuevo subset
+summary(bmi_hombres)
+
+# que es lo mismo que:
+summary(bmi_datos[bmi_datos$gender=="male",])
+```
+
+*Ejercicio*: corre la función `summary()` solo para los datos de las mujeres.
+
+Por último, a mi me gusta revisar si hay datos perdidos (missing data) en las variables numéricas:
+
+```{r}
+sum(is.na(bmi_datos$steps))
+```
+
+En la línea de código anterior, explica qué hacen `is.na()` y por qué usamos `sum()` para contar cuántos NA hay.
+
+Una vez que hemos explorado nuestros datos y que todo parece estar en orden, podemos pasar a responder hipótesis.
+
+*Ejercicio*
+
+Dividánse por equipos. Cada equipo debe poner a prueba una de estas hipótesis:
+
+1) Hay una diferencia estadísticamente significativa entre el promedio de pasos que dan los hombres y las mujeres.
+
+2) Hay una correlación *negativa* entre el número de pasos que dan las mujeres y su índice de masa coorporal. 
+
+3) Hay una correlación *positiva* entre el número de pasos que dan los hombres y su índice de masa coorporal.
+
+Pistas:
+
+Para la hipótesis 1, utiliza la función `t.test()`. Ejemplo:
+
+```{r}
+# datos chocolate
+male<-c(1:10)
+female<-c(7:20)
+
+# correr t test
+t.test(x= male, y=female)
+```
+
+Para las hipótesis 2 y 3, revisa la ayuda de la función `cor.test()`. Ejemplo con el set de datos `cars` (pre-cargado en r):
+
+```{r}
+# Explorar qué tiene cars:
+head(cars)
+
+# Poner a prueba si la velocidad y la distancia que les toma frenar están corelacionadas
+cor.test(x= cars$speed, y=cars$dist)
+```
+
+
+```{r, include=FALSE}
+# plot con ggplot
+
+library(ggplot2)
+ggplot(bmi_datos, aes(x=steps, y= bmi, col=gender)) + geom_point()
+
+# plot con R base:
+plot(bmi_datos$steps, bmi_datos$bmi, col=bmi_datos$gender)
+
+# Link a la publicación original: https://genomebiology.biomedcentral.com/articles/10.1186/s13059-020-02133-w 
+```
+
+
+
+
