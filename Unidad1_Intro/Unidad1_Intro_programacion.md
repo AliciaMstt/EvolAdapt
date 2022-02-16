@@ -473,5 +473,9 @@ Lee la documentación, encuentra dónde está guardado el archivo `maizteocintle
 
 ## Para aprender más
 
-Revisa las notas [Exploración de datos](Unidad1_Intro/ejercicio_explorando_datos.html) y [Graficar en R](Graficar-en-R.html)
+Revisa las notas:
+
+* [Exploración de datos](Unidad1_Intro/ejercicio_explorando_datos.html)
+
+* [Graficar en R](Graficar-en-R.html)
 
