@@ -264,7 +264,7 @@ min(bmi_datos$bmi)</code></pre>
 ##                     Max.   :15000   Max.   :32.00</code></pre>
 <p>Si tengo grupos, me gusta ver un resumen de los datos dentro de cada uno. Para esto podemos usar la misma función, pero especificiando un subset de los datos</p>
 <pre class="r"><code># subset de datos de los hombres
-bmi_hombres&lt;-bmi_datos[bmi_datos$gender==&quot;male&quot;, ] # en los corchetes, lo que está antes de la coma son las filas y después las columnas. Entonces le estamos diciendo a R dame las filas donde gender = male, y todas las columnas (no hay nada después de la comna, y nada es todo).
+bmi_hombres&lt;-bmi_datos[bmi_datos$gender==&quot;male&quot;, ] # en los corchetes, lo que está antes de la coma son las filas y después las columnas. Entonces le estamos diciendo a R: dame las filas donde gender = male, y todas las columnas (no hay nada después de la comna, y nada es todo).
 
 # summary de mi nuevo subset
 summary(bmi_hombres)</code></pre>
@@ -284,6 +284,38 @@ summary(bmi_datos[bmi_datos$gender==&quot;male&quot;,])</code></pre>
 ##                     Mean   : 8014   Mean   :24.91               
 ##                     3rd Qu.:10301   3rd Qu.:29.30               
 ##                     Max.   :15000   Max.   :32.00</code></pre>
+<p>Hacer un subset de datos filtrando por filas de interés también puede hacerse con la función <code>filter()</code> del paquete <code>dplyr</code>.</p>
+<pre class="r"><code>library(dplyr)</code></pre>
+<pre><code>## 
+## Attaching package: 'dplyr'</code></pre>
+<pre><code>## The following objects are masked from 'package:stats':
+## 
+##     filter, lag</code></pre>
+<pre><code>## The following objects are masked from 'package:base':
+## 
+##     intersect, setdiff, setequal, union</code></pre>
+<pre class="r"><code># subset de datos de los hombres
+bmi_hombres2&lt;-filter(bmi_datos, gender==&quot;male&quot;) # en las funciones de dplyr, el primer argumento son los datos, es decir la data frame (bmi_datos en este caso) en donde se quiere aplicar la función. Para seleccionar la columan NO es necesario usar el $.
+
+# summary de mi nuevo subset
+summary(bmi_hombres2)</code></pre>
+<pre><code>##       ID                steps            bmi           gender   
+##  Length:865         Min.   :  301   Min.   :15.70   female:  0  
+##  Class :character   1st Qu.: 5903   1st Qu.:19.90   male  :865  
+##  Mode  :character   Median : 7894   Median :26.30               
+##                     Mean   : 8014   Mean   :24.91               
+##                     3rd Qu.:10301   3rd Qu.:29.30               
+##                     Max.   :15000   Max.   :32.00</code></pre>
+<pre class="r"><code># que es lo mismo que:
+summary(filter(bmi_datos, gender==&quot;male&quot;))</code></pre>
+<pre><code>##       ID                steps            bmi           gender   
+##  Length:865         Min.   :  301   Min.   :15.70   female:  0  
+##  Class :character   1st Qu.: 5903   1st Qu.:19.90   male  :865  
+##  Mode  :character   Median : 7894   Median :26.30               
+##                     Mean   : 8014   Mean   :24.91               
+##                     3rd Qu.:10301   3rd Qu.:29.30               
+##                     Max.   :15000   Max.   :32.00</code></pre>
+<p>Puedes ver más comandos del paquete dplyr en su <a href="https://dplyr.tidyverse.org/articles/dplyr.html">sitio oficial</a> y hay muchos tutoriales que los explican con detalle.</p>
 <p><em>Ejercicio</em>: corre la función <code>summary()</code> solo para los datos de las mujeres.</p>
 <p>Por último, a mi me gusta revisar si hay datos perdidos (missing data) en las variables numéricas:</p>
 <pre class="r"><code>sum(is.na(bmi_datos$steps))</code></pre>

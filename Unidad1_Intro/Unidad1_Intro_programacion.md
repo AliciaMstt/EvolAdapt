@@ -471,10 +471,7 @@ Arteaga, María Clara et al. (2015), Data from: Genomic variation in recently co
 Lee la documentación, encuentra dónde está guardado el archivo `maizteocintle_SNP50k_meta_extended.txt` y **ábrelo en R** guardándolo en un data frame llamado `maíces`.
 
 
-## Graficar en R
+## Para aprender más
 
-Los apuntes de esta sección están en [Graficar en R](Graficar_en_R) (código y gráficas) y [Graficar en R](Graficar_en_R.Rmd) (sólo código)
-
-
-
+Revisa las notas [Exploración de datos](Unidad1_Intro/ejercicio_explorando_datos.html) y [Graficar en R](Graficar-en-R.html)
 

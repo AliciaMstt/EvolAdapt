@@ -76,7 +76,7 @@ Si tengo grupos, me gusta ver un resumen de los datos dentro de cada uno. Para e
 
 ```{r}
 # subset de datos de los hombres
-bmi_hombres<-bmi_datos[bmi_datos$gender=="male", ] # en los corchetes, lo que está antes de la coma son las filas y después las columnas. Entonces le estamos diciendo a R dame las filas donde gender = male, y todas las columnas (no hay nada después de la comna, y nada es todo).
+bmi_hombres<-bmi_datos[bmi_datos$gender=="male", ] # en los corchetes, lo que está antes de la coma son las filas y después las columnas. Entonces le estamos diciendo a R: dame las filas donde gender = male, y todas las columnas (no hay nada después de la comna, y nada es todo).
 
 # summary de mi nuevo subset
 summary(bmi_hombres)
@@ -84,6 +84,23 @@ summary(bmi_hombres)
 # que es lo mismo que:
 summary(bmi_datos[bmi_datos$gender=="male",])
 ```
+
+Hacer un subset de datos filtrando por filas de interés también puede hacerse con la función `filter()` del paquete `dplyr`. 
+
+```{r}
+library(dplyr)
+# subset de datos de los hombres
+bmi_hombres2<-filter(bmi_datos, gender=="male") # en las funciones de dplyr, el primer argumento son los datos, es decir la data frame (bmi_datos en este caso) en donde se quiere aplicar la función. Para seleccionar la columan NO es necesario usar el $.
+
+# summary de mi nuevo subset
+summary(bmi_hombres2)
+
+# que es lo mismo que:
+summary(filter(bmi_datos, gender=="male"))
+
+```
+
+Puedes ver más comandos del paquete dplyr en su [sitio oficial](https://dplyr.tidyverse.org/articles/dplyr.html) y hay muchos tutoriales que los explican con detalle.
 
 *Ejercicio*: corre la función `summary()` solo para los datos de las mujeres.
 
@@ -142,6 +159,7 @@ plot(bmi_datos$steps, bmi_datos$bmi, col=bmi_datos$gender)
 
 # Link a la publicación original: https://genomebiology.biomedcentral.com/articles/10.1186/s13059-020-02133-w 
 ```
+
 
 
 
