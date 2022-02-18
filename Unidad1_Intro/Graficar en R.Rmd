@@ -11,7 +11,7 @@ En esta sección veremos una introducción a graficar en R usando `graphics` que
 
 **Una de las mejores formas de aprender a hacer gráficas en R es buscar en internet/libro una gráfica parecida a la que queremos hacer y ver el código**. Algunas recomendaciones:
 
-* Sección IV de Adler, J. (2012) _R in a Nutshell_ O'Reilly. 
+* [El libro online de ggplot2](https://ggplot2-book.org/introduction.html)
 * [R Graph Gallery](http://www.r-graph-gallery.com/)
 * [R Graphics Cookbook](http://www.cookbook-r.com/Graphs/) 
 * [Blog de phytools](http://blog.phytools.org/)
@@ -123,7 +123,9 @@ Para poder usar `ggplot2` se requiere que la data.frame esté en **formato largo
 
 **Términos importantes**:
 
-**Ojo: Mucho mejor que ver la ayuda de cada función es ver el [R Graphics Cookbook](http://www.cookbook-r.com/Graphs/) u otros de los recursos en línea al principio de estas notas  **
+**Ojo: Mucho mejor que ver la ayuda de cada función es ver el [R Graphics Cookbook](http://www.cookbook-r.com/Graphs/) u otros recursos en línea.**
+
+El mejor recurso para aprender a usar ggplot2 a profundidad [El libro online de ggplot2](https://ggplot2-book.org/introduction.html)
 
 Y para familiarizarte con lo que puede hacer ggplot2 y sus argumentos, imprime y pon bajo la almohada su [acordeón]https://raw.githubusercontent.com/rstudio/cheatsheets/main/data-visualization.pdf)
 
@@ -136,7 +138,7 @@ Y para familiarizarte con lo que puede hacer ggplot2 y sus argumentos, imprime y
   - `geom_area()`
   - `geom_histogram()`
   - `geom_density()`
-  - `geom_boxplot()
+  - `geom_boxplot()`
 
 * __aes__ los estéticos que pondremos: forma, transparencia (alpha), color, relleno, tipo de línea, etc. 
 
@@ -146,14 +148,45 @@ Y para familiarizarte con lo que puede hacer ggplot2 y sus argumentos, imprime y
 
 Una gráfica de ggplot se puede guardar en un objeto de r, e irle sumando a dicho objeto otros elementos, con `+`.
 
-### Ejemplos:
+Para ver la estructura de una gráfica en ggplot2 vamos a hacer una figura icónica de coalsencia: la probabilidad de que dos individuos tengan un ancestro común en la generación anterior es 1/2Ne. 
 
-#### Gráficas de dispersión 
+Comencemos por crear los datos que queremos graficar:
+
+```{r}
+# Crear un vector del 1 al 20 para el Ne
+Ne<-c(1:20)
+Ne
+# Crear un vector con el resultado de 1/Ne
+p.shared.ancestor<-1/(2*Ne)
+p.shared.ancestor
+
+# ponerlos como columnas de una df
+x<-data.frame(Ne, p.shared.ancestor)
+head(x)
+```
+
+Ahora hgamos una figura en ggplot2:
 
 ```{r}
 # Cargar ggplot2
-library(ggplot2)
+library(ggplot2) # recuerda que esto se hace solo una vez al inicio de tu script o cuando vayas a inciar a usar la paquetaría
 
+# definir datos que quiero graficar
+ggplot(data=x, aes(x=Ne, y=p.shared.ancestor)) + # el más sirve para decir que le voy a agregar algo más al comando de ggplot2
+  # poner puntos
+  geom_point() +  
+  # poner línea que conecta los puntos
+  geom_line() + 
+  # ponerle título bonito al eje y
+  ylab("Probabilidad de compartir \n un ancestro en la generación previa") # "\n" sirve para que el texto aparezca en dos renglones
+```
+
+### Más Ejemplos:
+
+
+#### Gráficas de dispersión con más detalle
+
+```{r}
 # Examinar datos pre-cargados
 head(iris)
 
@@ -168,6 +201,8 @@ myplot<-ggplot(data=iris, aes(x=Sepal.Length, y= Sepal.Width))
 
 myplot + geom_point()
 ```
+
+Es decir, **podemos guardar una gráfia de ggplot2 en un objeto y sumarle nuevos cambios después**.
 
 Los colores y formas se cambian en **aes**:
 
@@ -184,7 +219,7 @@ ggplot(data=iris, aes(x=Sepal.Length, y= Sepal.Width)) +
 
 ```
 
-Si queremos quitar el fondo gris:
+Si queremos quitar el fondo gris podemos cambiar al tema blanco y negro, con `theme_bw()`:
 
 ```{r}
 ggplot(data=iris, aes(x=Sepal.Length, y= Sepal.Width)) + 
@@ -201,7 +236,7 @@ ggplot(data=iris, aes(x=Sepal.Length, y= Sepal.Width)) +
   facet_grid(Species ~ .)
 ```
 
-**Ejercicio** Pon color por especie a la gráfica anterior:
+**Ejercicio** Pon color por especie a la gráfica anterior para que se vea así:
 
 ```{r, echo=FALSE}
 ggplot(data=iris, aes(x=Sepal.Length, y= Sepal.Width, color=Species)) + 
@@ -218,14 +253,13 @@ p <- ggplot(data=iris, aes(x=Sepal.Length, y= Sepal.Width, color=Species)) +
 p 
 ```
 
-Podemos repetir la figura anterior pero cambiando los labels para que digan "Ancho de sépalo" y "Largo de sépalo", respectivamente. Así:
+Podemos repetir una de las figuras anteriores pero cambiando los labels para que digan "Ancho de sépalo" y "Largo de sépalo", respectivamente. Así:
 
 ```{r}
 # gráfico base
 p <- ggplot(data=iris, aes(x=Sepal.Length, y= Sepal.Width,     
                           color=Species)) + 
-            geom_point() +
-            facet_grid(Species ~ .)
+            geom_point()
 # Cambiar texto de los ejes:
 p + ylab("Ancho del sépalo") + xlab("Largo del sépalo")  
 
@@ -268,6 +302,19 @@ p.estados # ver gráfica
 # poner los nombres de los estados en vertical para que se lea mejor
 p.estados + theme(axis.text.x = element_text(angle = 90))
 
+```
+
+**Ejercicio**: Lee el tutorial de [este link](https://statisticsglobe.com/ordered-bars-in-ggplot2-barchart-in-r) y utilizalo para repetir la gráfica anterior, pero ordenando los estados (ahorita están en orden alfabético, ponlos en cualquier otro orden que quieras).
+
+Si queremos hacer un barplot con el valor de los datos usamos `stat="identity"`
+```{r}
+# datos de juguete
+chocolate <- data.frame(x = c("A", "B", "C", "D", "E"),
+                   y = c(10, 20, 5, -10, 25))
+
+#plot
+ggplot(chocolate, aes(x, y)) +                                     # Create basic barchart
+  geom_bar(stat = "identity")
 ```
 
 
@@ -452,7 +499,7 @@ Si incluyes esto cuando corras tu script remotamente (eg en un cluster) o cuanlo
 
 En R studio darle "Export" o "Copy" en el panel de la imagen y seleccionar un nombre de archivo y demás características.
 
-#### Método 3:
+### Método 3:
 
 En ggplot2 puedes usar la función `ggsave()` para guardar uno de tus plots. Por default se guarda el último que corriste:
 
