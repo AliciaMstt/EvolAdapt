@@ -317,10 +317,27 @@ ggplot(chocolate, aes(x, y)) +                                     # Create basi
   geom_bar(stat = "identity")
 ```
 
+#### Histograma
+
+Los hisogramas requieren que le demos en el eje x un vector numérico sobre el cual queremos ver la distribución de sus datos (count) en Y.
+
+```{r}
+ggplot(data=maices, aes(x=Altitud)) + # queremos que los datos sean la altitud
+                     geom_histogram() # queremos un histograma
+                     
+```
+
+Podemos ajustar el ancho de las barras con el argumento `binwidth`. Las unidades son las mismas en las que está tu variable del eje x. 
+
+```{r}
+ggplot(data=maices, aes(x=Altitud)) + # queremos que los datos sean la altitud
+    geom_histogram(binwidth = 50) # binwidth cada 50 metros
+                     
+```
 
 #### Boxplot
 
-Siguiendo con los mismos datos anteriores:
+Siguiendo con los datos de maíces anteriores:
 
 ```{r}
 # plot
