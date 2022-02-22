@@ -1,0 +1,146 @@
+---
+title: "Graficando el espectro de frecuencias de alelos"
+author: "Alicia Mastretta-Yanes"
+output: html_document
+---
+
+En estas notas vamos a hacer en R algunas gráficas del espectros de frecuencias alélicas. 
+
+Utilizaremos las librerías:
+
+```{r}
+library(ggplot2)
+library(tidyr)
+library(dplyr)
+```
+
+
+## Espectro de frecuencias de los alelos calculado con VCF
+
+### Calcular frecuencias con VCF y cargarlo a R
+Existen varios formatos y programas para guardar la información genotípica de datos genómicos. Uno de los más utilizados es **.vcf**, que es un formato para representar una posición en el genoma (posiblemente con variantes) y su información asociada. Los programas que utilizan estse formato son [VCFtools](https://vcftools.github.io/index.html) y [BCFtools](https://github.com/samtools/bcftools).
+
+En este ejercicio vamos a utilizar los datos `wolves.vcf`, que  saqué del repositorio Schweizer RM, Robinson J, Harrigan R, Silva P, Galaverni M, Musiani M, Green RE, Novembre J, Wayne RK (2015) Data from: Targeted capture and resequencing of 1040 genes reveal environmentally driven functional variation in gray wolves. Dryad Digital Repository. [http://dx.doi.org/10.5061/dryad.8g0s3](http://datadryad.org/resource/doi:10.5061/dryad.8g0s3). Es el archivo en la sección "Variant file in VCF format". Al bajarlo, recomienod guardarlo con el nombre `wolves.vcf` en vez del nombre largo que trae originalmente.
+
+En otra clase veremos el contenido y funcionamiento de Vcftools y otros programas que se corren desde `bash`. Por lo pronto, basta decir que una de las cosas que se pueden hacer con vcftools es calcular la frecuencia de los alelos de cada locus. Yo utilicé esta herramienta pra caclular la frecuencia de los alelos de todos los sitios sin missing data del archivo vcf `wolves.vcf` con esta línea de código en bash (OJO la línea siguiente **NO** es de R sino de bash, y no corre en este archivo de notas, la puse solo como referencia de cómo generé los datos):
+
+```
+vcftools --vcf wolves.vcf --max-missing 1.0 --freq --out wolves_freq_no_miss
+```
+
+El output de correr el comando de vcftools anterior es el archivo 
+`wolves_freq_no_miss.frq` el cual puedes descargar [aquí](wolves_freq_no_miss.frq).
+
+Aunque el archivo termina en `.frq` no es mas que un archivo de texto plano separado por tabulaciones, que podemos abrir con cualquier editor de texto y cargar a R. Sin embargo No podemos usar `read.delim()` directamente porque los datos tienen un problemita: el número de columnas en el Header no coinciden con el número de columans de datos, ya que el header "\{ALLELE:FREQ\}"  corresponde a dos columas de datos. Puedes editar directamente el archivo para corregir esto, o mejor, hacer esta trampita:
+
+```{r}
+misfrq<-read.delim("wolves_freq_no_miss.frq",
+           # saltarse la primera fila, que es el header incorrecto
+           skip =  1, 
+           # la primera línea ahora son datos, entonces no es un header
+           header = FALSE, 
+           # pongo los nombres de las columnas manualmente, asegurando que sean 6
+           col.names = c("CHROM",	"POS",	"N_ALLELES",	"N_CHR", "ALLE1", "ALLE2")
+           )
+head(misfrq)
+
+```
+
+### Limpiar datos para que estén en el formato adecuado para graficar
+
+Ya tenemos el número correcto de columnas, con el alelo mayor (de mayor frecuencia) en la columna que llamé `ALLE1` y el menor en `ALLE2`. Pero aún tenemos el problema de que en una misma celda está el alelo (A,G,T,C) y su frecuencia (número después de :). 
+
+Hay varias formas de corregir esto, pero una sencilla es con la función (separate)[https://www.rdocumentation.org/packages/tidyr/versions/1.2.0/topics/separate] del paquete tidyr:
+
+```{r}
+misfrq_tidy<-separate(data=misfrq, # df de origin
+  col=ALLE2, # la columna que quiero dividir
+  into=c("ALLE2", "ALLE2.frq"), # el nombre de las nuevas columnas
+  sep =":") # el patrón para separar
+head(misfrq_tidy)
+```
+
+Las funciones del paqeute `tidyr` forman parte del `tidyverso`. Recomiendo darle un ojo a estos paquetes y sus tutoriales.
+
+Nota que `ALLE2.frq` es un vector de caractéres (y queremos que sea numérico).
+
+```{r}
+class(misfrq_tidy$ALLE2.frq)
+```
+
+Hay varias formas de arreglar esto.
+
+Con R base "sobrescribimos" el vector `misfrq_tidy$ALLE2.frq` (es decir la columna `ALLE2.frq` de la df `misfrq_tidy`) con su versión numérica:
+
+```{r}
+misfrq_tidy$ALLE2.frq<-as.numeric(misfrq_tidy$ALLE2.frq)
+head(misfrq_tidy)
+```
+
+Alternativamente, podemos correrlo todo en un solo comando "enviando el output de `separate()` a la función `mutate()`". La función `mutate()` sirve para cambiar el contenido de la columna de una df con el resultado de una función. Para "enviar el output" de una función a otra se usa la "pipa" `%>%`, la cual es una función del tidyverso que se carga junto con `dplyr`. 
+
+```{r}
+# separar las columnas como hace rato:
+misfrq_tidy<- separate(data=misfrq, col=ALLE2, 
+         into=c("ALLE2", "ALLE2.frq"), sep =":") %>% # enviar el resultado a mutate
+           mutate(. , ALLE2.frq=as.numeric(ALLE2.frq)) # el . significa " con los datos que te enviaron de arriba". mutate sustituye el contenido de ALLE2.frq con el resultado de as.numeric(ALLE2.frq)
+head(misfrq_tidy)
+```
+
+**Ejercicio**: Utiliza separate y mutate para limpiar la columna ALLE1 igual que hicimos con ALLE2. Tu df final debe contener los datos de los alelos y sus frecuencias de ALLE1 y ALLE2 y verse así:
+
+```{r, echo=FALSE}
+misfrq_tidy2<- misfrq %>%
+               # limpiar ALLE2
+               separate(., col=ALLE2, into=c("ALLE2",  "ALLE2.frq"), sep =":") %>% 
+               mutate(. , ALLE2.frq=as.numeric(ALLE2.frq)) %>% 
+               # limpiar ALLE1 
+               separate(., col=ALLE1, into=c("ALLE1",  "ALLE1.frq"), sep =":") %>% 
+               mutate(. , ALLE1.frq=as.numeric(ALLE1.frq))
+head(misfrq_tidy2)
+
+```
+
+### ¡Por fin graficar!
+
+Ahora que las frecuencias alélicas finalmente son números ya podemos hacer una gráfica del espectro de frecuencias de los alelos. 
+
+En X pondremos la frecuencia de los alelos que calculamos con vcf. Al hacer el histograma, `geom_histogram()` verá el rango de datos (que sabemos van de 0 a 1) y determinará automáticamente el tamaño de los rangos (binwidth) en el cual lo dividirá. Luego contará cuántos renglones de nuestros datos (es decir alelos) caen en cada rango, lo cual determinará la altura de las barras:
+
+```{r}
+ggplot(misfrq_tidy, aes(x=ALLE2.frq)) +  # definimos los datos
+          # histograma    
+          geom_histogram() + 
+          # títulos bonitos
+          xlab("Frecuencia del alelo menor") +
+          # quitar fondo gris feo
+          theme_bw()
+```
+
+**Ejercicio:** utiliza el argumento `binwidth` dentro de `geom_histogram` para disminuir el ancho de las barras.
+
+Por default, el histograma nos da la cuenta (número de datos que caen en cada bin), pero es común quererlo ver en términos de porcentajes. Esto se puede definir especificando que en Y queremos el resutlado de calcular el porcentaje con la siguiente fórmula: ` (..count..)/sum(..count..))`, así:
+
+```{r}
+ggplot(misfrq_tidy, aes(x=ALLE2.frq)) +  # definimos los datos
+          # histograma    
+          geom_histogram(aes(y=(..count..)/sum(..count..)))  #en vez de count, queremos usar count para hacer una operación matemática que calcule el porcentaje.
+```
+
+**Ejercicio:** modifica la fórmula de Y para que el porcentaje esté expresado en 0-100 en vez de 0-1.
+
+**Ejercicio:** modifica el título de los ejes para que en X diga "Frecuencia alelo menor" y en Y diga: "Porcentaje".
+
+Como el bin más alto sólo contiene el 20% de los datos, ggplot2 en automático hace que el límite del eje Y sea solo un poco más grande. Si quisieras que el límite fuera 100, entonces:
+
+```{r}
+ggplot(misfrq_tidy, aes(x=ALLE2.frq)) +  # definimos los datos
+          # histograma con porcentaje en y
+          geom_histogram(aes(y=(..count..)/sum(..count..))) +
+          # cambiar limites de y
+          ylim(0,1)
+  
+```
+
+
+
