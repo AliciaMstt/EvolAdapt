@@ -142,5 +142,85 @@ ggplot(misfrq_tidy, aes(x=ALLE2.frq)) +  # definimos los datos
   
 ```
 
+## Espectro de frecuencias de los alelos calculado con Stacks
+
+[Stacks](https://catchenlab.life.illinois.edu/stacks/) es un software para ensamblar datos de representación reducida de genomas (GBS, RADseq y amigos) tanto *de novo* como con genoma de referencia. Además de ensamblar y llamar SNPs, Stacks permite hacer una serie de análisis de genética de poblaciones con el subprograma [populations](https://catchenlab.life.illinois.edu/stacks/comp/populations.php) . 
+
+El output son una serie de archivos txt con estadísticos resumen a nivel de población o de locus. El que nos interesa para hacer un plot del espectro de frecuencias es [populations.sumstats.tsv:](https://catchenlab.life.illinois.edu/stacks/manual/#pfiles). En el archivo [batch_1.sumstats.tsv](batch_1.sumstats.tsv) puedes ver un archivo output real, proviene del repositorio:
+
+Mastretta-Yanes, Alicia et al. (2014), Data from: Gene duplication, population genomics and species-level differentiation within a tropical mountain shrub, Dryad, Dataset, [https://doi.org/10.5061/dryad.n3jk5](https://doi.org/10.5061/dryad.n3jk5)
 
 
+### Cargar y limpiar datos
+
+Primero descarga el archivo batch_1.sumstats.tsv [aquí](batch_1.sumstats.tsv). 
+
+Para leer los datos, es necesario saltarse las primeras filas del archivo, porque contiene el nombre de las muestras de cada población:
+
+```{r}
+sumstats<-read.delim("batch_1.sumstats.tsv", 
+                     skip=9)
+head(sumstats)
+```
+
+Como sabemos que el Pop.ID corresponde a una determinada población, podemos cambiar el ID numérico por el nombre de la población (cuyas muestras sabemos por las líneas que omitos del archivo sumstats).
+
+```{r}
+# volver factor Pop.ID
+sumstats$Pop.ID<-as.factor(sumstats$Pop.ID)
+
+# ver cómo quedó
+head(sumstats$Pop.ID)
+
+## Cambiar los levels por nombres de las poblaciones (yo conozco los datos y sé que son estos, pero puedes ver en las líneas que omitimos que son las letras con las que empieza cada muestra)
+
+# levels originales
+levels(sumstats$Pop.ID)
+
+# sobreescribir levels con los nuevos
+levels(sumstats$Pop.ID)<-c("Aj", "An", "Iz", "Ma", "Pe", "Tl", "To", "Za", "Out")
+
+# revisar levels y datos
+levels(sumstats$Pop.ID)  
+head(sumstats)
+
+```
+
+
+### Graficar espectro de frecuencias
+
+Como puedes leer en la [documentación de populations.sumstats.tsv:](https://catchenlab.life.illinois.edu/stacks/manual/#pfiles), la columna "**P**" contiene la frecuencia del alelo más frecuente. 
+
+Hagamos un primer histograma:
+
+```{r}
+plt<-ggplot(data = sumstats, aes(x = P)) + theme_bw() +
+# histograma con porcentaje en y
+ geom_histogram(aes(y=(..count..)/sum(..count..))) +
+# renombrar ejes
+ylab("Percentage of loci") + xlab("Frequency of the major allele")
+
+plt
+```
+
+Claramente necesitamos arreglar el número de bins para que se vea mejor: 
+
+```{r}
+plt<-ggplot(data = sumstats, aes(x = P)) + theme_bw() +
+# histograma con porcentaje en y
+geom_histogram(aes(y=(..count..)/sum(..count..)),
+               binwidth = 0.08) +
+# renombrar ejes
+ylab("Percentage of loci") + xlab("Frequency of the major allele")
+plt
+```
+
+Recordemos que tenemos info por población, entonces podemos ver cómo se ve dentro de cada población:
+
+```{r}
+plt + facet_wrap(~Pop.ID)
+```
+
+Analiza con cuidado las dos últimas gráficas, en particular la cantidad de loci donde la frecuencia del alelo major es = 0.5 ¿Notas algo raro?
+
+Lee el artículo [Gene Duplication, Population Genomics, and Species-Level Differentiation within a Tropical Mountain Shrub](https://doi.org/10.1093/gbe/evu205) para averiguar más. 
