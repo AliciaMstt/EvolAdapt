@@ -14,6 +14,8 @@ Notas de este repositorio:
 * Exploración de datos: [versión html](Unidad1_Intro/ejercicio_explorando_datos.html)
 * Graficar en R: [versión html](Unidad1_Intro/Graficar-en-R.html) y  [versión código Rmd](Unidad1_Intro/Graficar_en_R.Rmd)
 * [Bash básico](Unidad1_Intro/Bash_basico)
+* [Scripts de bash](Unidad1_Intro/Bash_scripts.md)
+* [For loops en bash](Unidad1_Intro/For_loops_bash.md) 
 
 
 ## 2 Repaso de genpop e introducción a la evolución molecular adaptativa 

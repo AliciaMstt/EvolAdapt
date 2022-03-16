@@ -300,7 +300,19 @@ nuevos_final.bed	nuevos_final.fam
 $ nano ejemplonano.txt
 ```
 
-`vim` o `vi` funciona muy parecido. Solo que tienes que aprenderte (o revisar [en un acordeón](https://vim.rtorr.com/)) los shortcuts del teclado. Hay gente que vive solo con vim. 
+`vim` o `vi` funciona muy parecido. Solo que tienes que aprenderte (o revisar [en un acordeón](https://vim.rtorr.com/)) los shortcuts del teclado. Hay gente que vive solo con vim. Lo más importante que debes saber si ocupas vim es:
+
+* `Shift I` para comenzar a editar (de lo contrario no escribes en la pantalla, sino que pones comandos de vim). Debe aparecer abajo de la pantalla el texto `INSERT`.
+
+* `ESC :` para entrar al menú de vim con el que se guarda y cierra. Deben aparecer `:` abajo de la pantalla y si escribes algo el texto debe aparecer después de los `:`. Estos son los comandos más útiles que poner después de los `:`
+
+`:wq` guardar cambios (w de write) y salir.
+
+`:q!` salirte sin guardar
+
+Es decir, si entras en pánico `:q!`. Hasta hay memes al respecto:
+
+![](https://pbs.twimg.com/media/FCkFgT7WEAowGa5?format=png&name=900x900)
 
 
 ### Comodines o el uso de `*` `?` `[]` `{}`
