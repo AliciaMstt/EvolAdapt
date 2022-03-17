@@ -20,4 +20,8 @@ Notas de este repositorio:
 
 ## 2 Repaso de genpop e introducción a la evolución molecular adaptativa 
 
-* Gráficas del espectro de frecuencias: [version html](Unidad2_Intro_popgen/plot_SFS.html)
+* Gráficas del espectro de frecuencias: [version html](Unidad2_Intro_popgen/plot_SFS.html).
+
+## 3 Tests clásicos de selección
+
+* [Practica for loops y scripts con mlcoalsim](Unidad3_Test_selec_classic/Scripts_y_loops_mlcoalsim.md)

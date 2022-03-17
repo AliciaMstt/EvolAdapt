@@ -35,7 +35,7 @@ La timina es una base nitrogenada
 
 * Los elementos de la lista NO se separan por comas (en otros lenguajes sí).
 * Para referirnos al "elemento i" dentro de los comandos debemos usar como prefijo el símbolo `$`.
-* No tienes que escribir el `>` antes de `echo` y de `done`, los pongo solo para mostrar que eso aparece en la terminal hasta que terminemos de meter los comandos que formarán parte del loop. De hecho `done` sirve para decir "ok, aquí termina el loop". En los ejemplos de abajo ya no lo pondré.
+* **No** tienes que escribir el `>` antes de `echo` y de `done`, los pongo solo para mostrar que eso aparece en la terminal hasta que terminemos de meter los comandos que formarán parte del loop. De hecho `done` sirve para decir "ok, aquí termina el loop". En los ejemplos de abajo ya no lo pondré.
 
 Otro ejemplo:
 
@@ -60,13 +60,46 @@ Y un ejemplo más, usando rutas relativas:
 for i in {1..100}; do
 mkdir directorio$i;
 cd directorio$i;
-touch texto${i}.txt;
+touch texto${i}ok.txt;
 cd ../;
 done
 ```
 
 Lo cual hará 100 directorios (llamados directorio1, directorio2 y así) con un archivo de texto (llamados texto1, texto2,...) adentro. Si lo quieres repetir se usa el comando **-p** para sobre-escribir el contenido de cada directorio (a usar con cuidado!)
 
+**NOTA IMPORTANTE: cuándo usar `${i}`**
+
+Como habrás notado arriba, para llamar al elemento `i` dentro del loop a veces usamos solo `$i`, como en `mkdir directorio$i`. Pero también usamos `${i}` como en `touch texto${i}ok.txt`. Esto se debe a que `$i` funciona **solo si no tiene más texto después** (con la execpción de algunos caracteres, como `.`). Así bash puede distinguir entre una variable que se llame `$i` y otra que se llame `$ilusion`. Entonces para evitar errores es buena práctica utilizar `${nombre de la variable}`.
+
+### Enlistar los elementos en una variable fuera del loop
+
+Si nuestra lista de elementos es corta es fácil escribirla dentro del loop, pero si esta es muy larga o queremos hacer comentarios al respecto, puede ser útil que dicha lista se defina en una variable antes del loop, y que luego se llame en el loop.
+
+
+**Crear variables**
+
+* La sintaxis es **nombre de la variable** + `=` **el contenido de la variable, entre `" "`**
+* NO debe haber espacios entre el símbolo = y la variable o su valor. 
+* El nombre de la variable NO debe contener espacios.
+* El nombre de la variable puede ser cualquier cosa que queramos **MENOS** el nombre de un comando que exista.
+
+
+
+Ejemplo:
+
+```
+mi_var="gato"
+```
+
+Podemos crrear una variable con una lista de elementos para usarla en un for loop:
+
+```
+# Crear variable
+VAR="2 3 4 6 7 9 19 39 49" 
+for i in $VAR; do
+echo "$i elefantes se columpiaban sobre la tela de una añaña"
+done
+```
 
 
 ### Crear arrays y utilizarlos como una lista en un loop
