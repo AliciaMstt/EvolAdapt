@@ -1,0 +1,295 @@
+---
+author: "Alicia Mastretta-Yanes"
+output: html_document
+---
+# Procesar el output de SweeD para identificar loci con una verosimilitud significativa
+
+Estas notas están basadas en el [tutorial de cómo correr y combinar el output de SeedW y OmegaPlus](http://pop-gen.eu/wordpress/selective-sweep-analysis-pipelines/combine-omegaplus-and-sweed-thresholds-from-simulations) del EvoLab@FORTH-ICS (creadores de los programas en cuestión), en el [Manual de SweeD](https://github.com/alachins/sweed/raw/master/sweed3.0_manual.pdf) y en el artículo [Schweizer et al (2015)](https://onlinelibrary.wiley.com/doi/abs/10.1111/mec.13467) (el de los lobos que hemos utilizado antes) con su respectivo repositorio de Dryad. También recomiendo leer la [revisión Pavlidis & Alachiotis (2017)](https://link.springer.com/article/10.1186/s40709-017-0064-0) donde se compara SweeD con otros programas similares.
+
+*Referencias*:
+
+Schweizer, R.M., Robinson, J., Harrigan, R., Silva, P., Galverni, M., Musiani, M., Green, R.E., Novembre, J. and Wayne, R.K. (2016), Targeted capture and resequencing of 1040 genes reveal environmentally driven functional variation in grey wolves. Mol Ecol, 25: 357-379. https://doi.org/10.1111/mec.13467
+
+Schweizer RM, Robinson J, Harrigan R, Silva P, Galaverni M, Musiani M, Green RE, Novembre J, Wayne RK (2015) Data from: Targeted capture and resequencing of 1040 genes reveal environmentally driven functional variation in gray wolves. Dryad Digital Repository. http://dx.doi.org/10.5061/dryad.8g0s3.
+
+Pavlidis P, Živkovic D, Stamatakis A, Alachiotis N., Mol Biol Evol. (2013) SweeD: likelihood-based detection of selective sweeps in thousands of genomes. Sep;30(9):2224-34. doi: 10.1093/molbev/mst112. Epub 2013 Jun 18. [https://doi.org/10.1093/molbev/mst112](https://doi.org/10.1093/molbev/mst112).
+
+Pavlidis, P., Alachiotis, N. A survey of methods and tools to detect recent and strong positive selection. J of Biol Res-Thessaloniki 24, 7 (2017). [https://doi.org/10.1186/s40709-017-0064-0](https://link.springer.com/article/10.1186/s40709-017-0064-0)
+
+[Manual de SweeD](https://github.com/alachins/sweed/raw/master/sweed3.0_manual.pdf)
+
+
+*Ejercicio*: Lee el manual de SweeD y los artículos de Pavlidis para contestar lo siguiente:
+- ¿Cuáles son los input posibles? 
+- Da un ejemplo de cómo debe verse la línea de comando para correr el programa utilizando un archivo vcf como input.
+- ¿Cuáles son las columnas del output principal (report)? ¿Qué son y para qué sirven el likelihood y el alpha?
+- Explica con tus propias palabras para qué sirve el flag `-grid`
+
+## Datos para esta práctica
+
+Puedes descargar los datos para esta práctica de [aquí SweeD_outexamples.zip](SweeD_outexamples.zip). Una vez que bajes y descomprimas (unzip), deberás tener un directorio llamado `SweeD_outexamples`. Ese directorio deberá estar en el WD del script de esta clase (pero NO ser el WD).
+
+Asumiendo que el directorio está en nuestro WD, podemos ver su contenido desde R con:
+
+```{r}
+list.files("SweeD_outexamples/")
+```
+
+Los archivos `SweeD_Report.ms1` y `OmegaPlus_Report.ms1` vienen del [tutorial del EvoLab@FORTH-ICS](http://pop-gen.eu/wordpress/selective-sweep-analysis-pipelines/combine-omegaplus-and-sweed-thresholds-from-simulations), corresponden al reporte de resultados de SweeD y OmegaPlus (otro programa que no veremos en esta práctica, pero sí en un ejercicio de tarea). Estos datos son una muestra (1000 líneas) de analizar con SweeD y OmegaPlus los datos del cromosoma 1 del 1000 Genome Project.
+
+Los archivos `SweeD_Report.Pop_1_WestForest*` vienen del [repositorio Dryad del artículo de los lobos](http://dx.doi.org/10.5061/dryad.8g0s3), y corresponden al output de correr SweeD en las regiones neutrales y génicas de las muestras de lobos del ecotipo "West Forest" (en el artículo corren el programa para varios ecotipos distintos).
+
+Cargar y examinar los datos output del tutorial de SweeD:
+```{r}
+sweed <- read.table("SweeD_outexamples/SweeD_Report.ms1", header=TRUE)
+head(sweed)
+nrow(sweed)
+```
+
+Cargar y examinar los datos output de SweeD del artículo de los lobos:
+```{r}
+genic<-read.delim("SweeD_outexamples/SweeD_Report.Pop_1_WestForest_Genic_10000_chrAll.txt", header = FALSE,
+                     col.names = c("chromosome", "position", "Likelihood", "alpha"),
+                     sep= " ") 
+
+neutral<-read.delim("SweeD_outexamples/SweeD_Report.Pop_1_WestForest_Neutral_10000_chrAll.txt", header = FALSE,
+                     col.names = c("chromosome", "position", "Likelihood", "alpha"),
+                     sep= " ")
+
+head(genic)
+nrow(genic)
+head(neutral)
+nrow(neutral)
+```
+
+La columna *Likelihood*, o formalmente "Composite Likelihood Ratio value (CLR)" compara la verosimilitud de un modelo sweep contro un modelo neutral. Entre más alto sea el valor, mayor evidencia de un selective sweep. La columna *alpha* es una función del coeficiente del selección, la tasa de recombinación y el Ne. Alpha es inversamente proporcional a la fuerza de la selección (a menor valor, mayor selección).
+
+## Detectar loci outliers dentro del reporte de resultados de SweeD
+
+### Comparando vs simulaciones dadas por un modelo demográfico conocido 
+
+En el artículo que describe SweeD (Pavlidis et al 2013) analizan los datos del cromosoma 1 del 1000 Genome Project con SweeD y con OmegaPlus. Fragmento del artículo:
+
+_To demonstrate the capability of SweeD to handle real-world genomic data, we downloaded and analyzed the chromosome 1 data set from the 1000 Genome Project. This data set contains the genetic variation from 1,092 humans, that is, the sample size is 2,184. The size of the input file is 87 GB, and it comprises 2,896,960 SNPs. We carried out the analysis on an Intel Core i7-2600 processor with 4 cores (8 threads with hyperthreading) running at 3.4 GHz. We calculated the CLR test at 100,000 points (gridsize), and the SFS was obtained from the entire data set. The total execution time was 8 h and 15 min."_ [...] 
+_We also analyzed this data set with OmegaPlus command line flags: maxwin = 280,000, minwin = 1,000; see manual for further details on the OmegaPlus command line. OmegaPlus was faster than SweeD: total execution time: 2 h and 37 min. The OmegaPlus and SweeD results are illustrated in figure 4._
+
+En dicho ejemplo SweeD calculó el SFS neutral a partir de la muestra, con esta línea de código (bash):
+
+```{bash, eval=FALSE}
+# run sweed
+SweeD -name ms1 -length 100000 -input ms1.out -grid 1000 -noSeparator
+```
+
+
+Los output de correr dichos programas están disponible en el tutorial [tutorial del EvoLab@FORTH-ICS](http://pop-gen.eu/wordpress/selective-sweep-analysis-pipelines/combine-omegaplus-and-sweed-thresholds-from-simulations) y son los que también están disponibles en el zip de los materiales de la clase. El tutorial también incluye un script de R llamado `combined_plot.R` con el cual se hizo la figura 4 del artículo. 
+
+Las notas de esta sección son una versión simplificada (solo para SweeD en vez de incluir OmegaPlus) y anotada del script `combined_plot.R`. Puedes bajar el script original de [esta liga](http://pop-gen.eu/wordpress/wp-content/uploads/2013/12/combine_plots_simOutliers.tar.gz.).
+
+Recordemos cómo se ve el output de SweeD (cargamos el archivo arriba):
+```{r}
+head(sweed)
+```
+
+
+El valor de likelihood de un locus no nos es informativo si no lo comparamos contra el valor de otros locus. De la misma forma que si sacas 8 en una tarea, no te dice si eso es menos o más de lo que obtuvieron las otras personas en tu clase. Para detectar outliers los creadores de SweeD usan una función de R que veremos a continuación. Pero antes veremos qué son las funciones en R.
+
+Este es el esqueleto de una función escrita dentro de R:
+
+```{r}
+myfunction <- function(arg1, arg2, ... ){
+statements
+return(object)
+}
+```
+
+`myfunction` es el nombre que yo decidí darle a la función. Puede ser cualquier cosa (pero procura no ocupar nombres comunes de otras funciones). 
+
+Dentro del paréntesis de `function()` debes poner el input y argumentos que vaya a usar tu función. 
+Luego entre {} pones el contenido ("statements") de todo lo que debe hacer tu función. 
+
+Dentro de los statements, el comando `return` es necesario al final de una función siempre que queramos que dicha función "devuelva" un objeto (por ejemplo una df que creemos como parte de la función). De no poner esta instrucción, la función correrá, pero no veremos ningún resultado en pantalla.
+
+Ejemplo: una función llamada `calc.theta` que te permite calcular tetha dados Ne y u como argumentos. Recuerda que theta = 4Neu.
+```{r}
+# Definir función:
+cal.theta<-function(Ne, u){
+  theta<-4*Ne*u
+  return(theta)
+}
+
+# Usar función:
+cal.theta(4000, .00001)
+```
+
+Ahora que ya sabemos cómo hacer funciones, examinemos la función con la que asignar p-values al output de SweeD que viene con el tutorial del programa:
+
+```{r}
+
+assign.pvalues <- function(array){
+  ## función para asignar p-values a los valores likelihood del output de SweeD
+  ## el input "array" debe ser la columna de likelihood del output de SweeD
+  pvalues <- array(0, length(array)) # crea un arreglo de 0 al largo del vector original
+
+  ordered.indexes <- order(array) # ordena los datos de menor a mayor
+  
+  j <- length(array) # crea un número del largo del vector (e.g. 1000)
+  # El loop de abajo realiza: para cada uno de los elementos del arreglo (ordenado) divide el valor de j / el total de elementos. En cada iteración j disminuye en 1. Si el arreglo tiene 1000 elementos, entonces la operación será 1000/1000, luego 999/1000 y así hasta 0/1000.
+  # La operación se realiza para todos los elementos de nuestros datos empíricos (likelihood) en el orden de menor a mayor.
+  for( i in ordered.indexes ){
+    pvalues[i] <- j/length(array) 
+    j <- j-1 # j empieza con el total de observaciones
+  }
+
+  return(pvalues)  # escupe como resultado de la función el vector de p-values que acabamos de producir.
+}
+```
+
+
+Correr función con los datos de likelihood ejemplo:
+
+```{r}
+sw.pval <- assign.pvalues(sweed$Likelihood)
+head(sw.pval)
+```
+
+Encontrar outliers basados en un threshold determinado:
+
+```{r}
+thr <- 0.05 # umbral de significancia deseado
+outliers <- which(sw.pval < thr) # identificar cuáles están por debajo del umbral deseado
+# ver cuántos son
+length(outliers)
+```
+
+Graficar (en base R):
+
+```{r}
+plot(sweed[,1], sweed$Likelihood, col="darkgray", pch=16, ylab="", xlab="")
+mtext(side=1, text="Position", 2)
+mtext(side=2, text="Likelihood", 2)
+points(sweed[outliers,1], sweed$Likelihood[outliers], col="red", pch=16, cex=1.2)
+points(sweed[outliers,1], sweed$Likelihood[outliers], col="black", pch=1, cex=1.2)
+mtext(side=3, text="Outliers detectados con SweeD", adj=0.5, 0.)
+
+```
+
+**Ejercicio:** utiliza los datos de OmegaPlus (`OmegaPlus_Report.ms1`) y SweeD (`SweeD_Report.ms1`) del tutorial de SweeD para repetir la figura anterior, pero resaltando solo los loci que **son significativos tanto en SweeD como en OmegaPlus**. Puedes ocupar el código del script `combined_plot.R` que viene en [esta liga](http://pop-gen.eu/wordpress/wp-content/uploads/2013/12/combine_plots_simOutliers.tar.gz.), pero deberás comentarlo para explicar con tus propias palabras lo que hace cada comando.
+
+### Comparando vs datos neutrales empíricos
+
+Este es un estracto de los métodos del artículo de los lobos (Schweizer, et al 2015):
+
+_For each ecotype, we ran SweeD on the data from neutral regions and genic regions separately, using a grid size of 10 000. The P-value of each genic position likelihood score was determined by calculating the empirical percentile according to the distribution of likelihood values for the neutral regions, and P-value correction for multiple testing was achieved through a BH correction (using the ‘ecdf’ and ‘p.adjust’ functions within R). A FDR threshold of 0.05 was used not as a strict threshold, but rather as a parameter to assign especially high support for outliers (e.g. Wenzel & Piertney 2014). With this approach, we aimed to correct for neutral population demographic history without the assumptions of simulating data as there is no prior demographic model available._
+
+En los datos para esta práctica, bajamos del repositorio de Dryad los resultados de correr SweeD con datos del ecotipo West Forest. Hay dos archivos, uno para el conjunto de loci neutrales (que no caen en regiones génicas) y génicos (exones y regiones flanqueantes, ver métodos del artículo). Una vez aue los cargamos en R como se explica arriba, podemos ver cómo son con:
+
+```{r}
+# examinar genic
+head(genic)
+nrow(genic)
+summary(genic)
+sum(genic$Likelihood==0) # contar cuantos tienen una verosimilitud de 0
+
+# examinar neutrales
+head(neutral)
+nrow(neutral)
+summary(neutral)
+sum(neutral$Likelihood==0)
+```
+
+No nos interesa el p-value de los loci con una verosimilitud de 0, porque significa que no están bajo selección. Entonces hay que filtrarlos:
+
+```{r}
+# Mantener solo valores mayores a 0
+genic2<- subset(genic, genic$Likelihood > 0)
+neutral2<-subset(neutral, neutral$Likelihood >0)
+```
+
+
+La función `ecdf()` (del paquete `stats` que viene pre-cargado en R) sirve para calcular función de la distribución empírica acumulada. [Lee esto para una explicación amigable de que´es eso](https://data.library.virginia.edu/understanding-empirical-cumulative-distribution-functions/). Vamos a utilizar esta función con los datos neutrales para calcular con base en datos empíricos, cómo esperaríamos estuvieran distribuidos los valores bajo un modelo neutral. Luego vamos a utilizar la función con los datos genéticos y ver cuáles se salen de lo esperado significativamente.
+
+```{r}
+### Calcular la función ECDF con datos neutrales
+Likelihood_Function <- ecdf(neutral2$Likelihood)
+
+# El resultado de ecdf es OTRA FUNCIÓN. Veamosla. 
+Likelihood_Function
+
+## Ahora podemos correr esta última función con los datos genéticos. 
+# Para cada valor que le demos, nos regresará la probabilidad acumulada para ese valor.
+x<-Likelihood_Function(genic2$Likelihood)
+
+# revisar cómo se ve el resultado
+head(x)
+length(x)
+
+```
+
+Ahora sí calculamos el p value, como 1 - los valores resultados de la función ecdf(datos neutrales)(score datos genéticos)
+```{r}
+# Calcular el p-value
+Likelihood_PVAL<-1-x
+
+# examinarlo
+head(Likelihood_PVAL)
+length(Likelihood_PVAL)
+summary(Likelihood_PVAL)
+```
+
+Dado que estamos haciendo muchas comparasiones, es necesario corregir los p-value. Esto se hace  con la función `p.adjust()` (tmb del paquete stats) siguiendo uno de varios métodos posibles. En el artículo escogieron el "BH", que viene de Benjamini & Hochberg (1995) y que también se conoce como "FDR" por "False discovery rate".
+
+
+```{r}
+## Ajustar el p-value con el método BH o FDR
+Likelihood_FDR=p.adjust(Likelihood_PVAL,"BH")
+
+# examinar p-value ajustado
+summary(Likelihood_FDR)
+
+## Agregar resultados al objeto con el resto de los datos
+genic2$Likelihood_fdr <- Likelihood_FDR
+genic2$Likelihood_pval <- Likelihood_PVAL
+
+```
+
+Examinar cuántos valores son significativos con el pvalue original y el corregido:
+
+```{r}
+sum(genic2$Likelihood_fdr <= 0.05)
+sum(genic2$Likelihood_pval <= 0.05)
+```
+
+Hacer un plot resaltando los snps significativos.
+
+```{r}
+
+# nueva variable con chromosoma + posicion para hacer plot en orden correcto
+genic2$SNP<-as.numeric(paste0(genic2$chromosome, genic2$position))
+
+
+# plot
+library(ggplot2)
+
+ ggplot(genic2, aes(x=SNP, y=Likelihood)) +
+  geom_point(size=1,
+    aes(colour = Likelihood_pval <= 0.05 )) + # colorear por umbral significancia
+  scale_color_manual(values = c("black", "red"))
+
+```
+
+Hacer un zoom a un cromosoma de interés
+```{r}
+# definri cromosoma de interés
+chrom<-38 # modifica aquí al cromosoma deseado
+
+# plot (utiliza chrom para seleccionar el cromosoma  y ponerlo en el título tmb)
+ggplot(dplyr::filter(genic2, chromosome==chrom) , 
+       aes(x=position, y=Likelihood)) +
+  geom_point(size=1,
+    aes(colour = Likelihood_pval <= 0.05 )) + # colorear por umbral significancia
+  scale_color_manual(values = c("black", "red")) +
+  ggtitle(paste("chromosome", chrom))
+
+```
+
+**Ejercicio:** Repite los análisis anteriores, pero con el set de datos del ecotipo "artic" (debes bajarlo del repositorio de Dryad).
