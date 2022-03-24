@@ -25,3 +25,4 @@ Notas de este repositorio:
 ## 3 Tests clásicos de selección
 
 * [Practica for loops y scripts con mlcoalsim](Unidad3_Test_selec_classic/Scripts_y_loops_mlcoalsim.md)
+* Práctica procesar el output de SweeD. [Versión html](Unidad3_Test_selec_classic/SweeD_pvalues.html) y [versión código Rmd](SweeD_pvalues.Rmd)
