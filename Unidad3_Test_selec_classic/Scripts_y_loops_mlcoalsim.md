@@ -113,7 +113,7 @@ done
 
 Si todo sale bien, entonces:
 
-8. Ya podemos guardar todo en un script (que es un archivo de texto) que llamaremos: [1\_run\_mlcoalsim.sh](1_run_mlcoalsim.sh). 
+8. Ya podemos guardar todo en un script (que es un archivo de texto) que llamaremos: [1\_run\_mlcoalsim.sh](clase_Ajaliscana/1_run_mlcoalsim.sh). 
 
 Puedes llamar al script como sea, pero como veremos más adelante, es buena idea numerarlos cuando forman parte de una pipeline.
 

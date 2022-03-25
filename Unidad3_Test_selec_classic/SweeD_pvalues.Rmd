@@ -75,6 +75,8 @@ _We also analyzed this data set with OmegaPlus command line flags: maxwin = 280,
 
 En dicho ejemplo SweeD calculó el SFS neutral a partir de la muestra, con esta línea de código (bash):
 
+**Esta línea es de bash no de R y NO corre si no tienes el programa instalado y los datos input. O sea la pongo como referencia para que sepas de donde salieron los datos output, pero no la debes correr**
+
 ```{bash, eval=FALSE}
 # run sweed
 SweeD -name ms1 -length 100000 -input ms1.out -grid 1000 -noSeparator
