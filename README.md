@@ -26,3 +26,8 @@ Notas de este repositorio:
 
 * [Practica for loops y scripts con mlcoalsim](Unidad3_Test_selec_classic/Scripts_y_loops_mlcoalsim.md)
 * Práctica procesar el output de SweeD. [Versión html](Unidad3_Test_selec_classic/SweeD_pvalues.html) y [versión código Rmd](SweeD_pvalues.Rmd)
+
+## 4 Proyectos bioinformáticos
+
+* [Organización de un proyecto bioinformático](Unidad4_ProyectoBioinfo/Organizacion_proyecto.md)
+* [git y GitHub](Unidad4_ProyectoBioinfo/Git_github.md)
