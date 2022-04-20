@@ -92,7 +92,7 @@ results$nb_outliers
 La lista de outliers (id del locus) también se puede consultar:
 
 ```{r}
-results$outliers
+head(results$outliers)
 ```
 
 **Ejercicio:** Divídanse por equipos y discutan ¿Cuántos outliers se detectaron y cuántos loci originalmente había? ¿A qué se debe este resultado?
