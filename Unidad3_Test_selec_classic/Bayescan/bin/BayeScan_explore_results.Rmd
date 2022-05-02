@@ -24,7 +24,7 @@ Referencias:
 
 ## Datos y otros archivos para esta práctica
 
-Puedes descargar los datos de esta práctica [en este zip](data.zip), o uno por uno en el repositorio original de los datos y del zip de BayeScan. La práctica de abajo asume que los scripts se encuentran en un directorio llamado `bin`, que debe ser el WD, y un directorio al mismo nivel, llamado `data`. 
+Puedes descargar los datos de esta práctica [en este zip](../data.zip), o uno por uno en el repositorio original de los datos y del zip de BayeScan. La práctica de abajo asume que los scripts se encuentran en un directorio llamado `bin`, que debe ser el WD, y un directorio al mismo nivel, llamado `data`. 
 
 * `bayescan_n107_Ecotypes_GenicRegions_95CallRate_wEcotypes_output_prior_odds_1000_fst.txt` es el archivo output de correr BayeScan con los SNPs génicos de 107 lobos de 6 ecotipos, y `bayescan_n107_NeutralRegions_95CallRate_LDpruned_output_prior_odds_10000_fst.txt` es lo mismo pero con los datos neutrales (regiones no génicas). **Nota** en el repo de Dryad los archivos vienen con encabezado, yo se lo borré, pues el default de BayeScan no es ponerles encabezado y las funciones de R que vienen con el programa asumen que no hay encabezado.
 
@@ -101,6 +101,99 @@ head(results$outliers)
 
 Los métodos del artículo de los lobos dicen lo siguiente:
 
-*To assess diversifying selection among ecotypes, we used the Bayesian method implemented in BAYESCAN v2.1 (Foll & Gaggiotti 2008). BAYESCAN tests whether the subpopulation-specific allele frequencies are significantly different from those within the common gene pool and computes an alpha value to assess departures from neutrality. Significance is assigned by a measure of support for a model in which selection explains allele frequency differences among populations vs. a null model. Positive alpha values imply diversifying selection and negative values balancing or purifying selection. Given concern for elevated false positive rates for detecting balancing or purifying selection under isolation by distance (Lotterhos & Whitlock 2014), we focus on diversifying selection. In populations where isolation by distance is present, as is the case here (Schweizer et al. 2015), BAYESCAN can have high false positive rates unless a large set of neutral loci are used to generate empirical P-values (Lotterhos & Whitlock 2014). Therefore, we ran BAYESCAN separately for the neutral and genic regions, with prior odds of 10 000 and 1000, respec- tively, and calculated empirical P-values of alpha with a BH correction for multiple testing, as was done for SWEED.*
+*To assess diversifying selection among ecotypes, we used the Bayesian method implemented in BAYESCAN v2.1 (Foll & Gaggiotti 2008). BAYESCAN tests whether the subpopulation-specific allele frequencies are significantly different from those within the common gene pool and computes an alpha value to assess departures from neutrality. Significance is assigned by a measure of support for a model in which selection explains allele frequency differences among populations vs. a null model. Positive alpha values imply diversifying selection and negative values balancing or purifying selection. Given concern for elevated false positive rates for detecting balancing or purifying selection under isolation by distance (Lotterhos & Whitlock 2014), we focus on diversifying selection. In populations where isolation by distance is present, as is the case here (Schweizer et al. 2015), BAYESCAN can have high false positive rates unless a large set of neutral loci are used to generate empirical P-values (Lotterhos & Whitlock 2014). Therefore, we ran BAYESCAN separately for the neutral and genic regions, with prior odds of 10 000 and 1000, respectively, and calculated empirical P-values of alpha with a BH correction for multiple testing, as was done for SWEED.*
 
 **Ejercicio:** dividanse por equipos, revisen las notas de la práctica de SweeD y expliquen brevemente cómo hacer lo anterior (nombren los princiapales pasos y funciones).
+
+#### Ejercicio resuelto:
+
+Primero calculamos la función ECDF con los datos neutrales
+
+```{r}
+# estimate the empirical cumulative distribution functione with neutral data
+Likelihood_Function <- ecdf(wolves_neutral$prob)
+```
+
+Después evaluamos esa función con los datos genéticos:
+
+```{r}
+# run function
+x<-Likelihood_Function(wolves_genic$prob)
+
+# check results
+head(x)
+length(x)
+```
+
+Ahora sí calculamos el p value, como 1 - los valores resultados anteriores.
+
+```{r}
+Likelihood_PVAL<-1-x
+```
+
+Dado que estamos haciendo muchas comparasiones, es necesario corregir los p-value. Esto se hace con la función p.adjust() (tmb del paquete stats) siguiendo uno de varios métodos posibles. En el artículo escogieron el "BH", que viene de Benjamini & Hochberg (1995) y que también se conoce como "FDR" por "False discovery rate".
+
+```{r}
+Likelihood_FDR=p.adjust(Likelihood_PVAL,"BH")
+```
+ 
+Crear una df nueva con los resultados que incluya los datos originales y los pvalues
+
+```{r}
+# copy original data
+results<-wolves_genic 
+
+# add pvalues
+results$pval <- Likelihood_PVAL
+results$pval.adjust <- Likelihood_FDR
+
+```
+
+Examinemos cuáles son significativos ahora:
+
+```{r}
+sum(results$pval.adjust<=0.001)
+```
+
+Explorar loci significativos mediante varias gráficas:
+
+```{r}
+# plot
+library(ggplot2)
+
+ggplot(results, aes(x=fst, y=alpha)) +
+  geom_point(size=2, alpha=0.5,
+  aes(colour = pval.adjust <= 0.001 )) + # colorear por umbral significancia
+  scale_color_manual(values = c("black", "red"))
+```
+
+```{r}
+ggplot(results, aes(x=bayescan_number, y=fst)) +
+  geom_point(size=2, alpha=0.5,
+  aes(colour = pval.adjust <= 0.001 )) + # colorear por umbral significancia
+  scale_color_manual(values = c("black", "red"))
+```
+
+```{r}
+ggplot(results, aes(x=bayescan_number, y=alpha)) +
+  geom_point(size=2, alpha=0.5,
+  aes(colour = pval.adjust <= 0.001 )) + # colorear por umbral significancia
+  scale_color_manual(values = c("black", "red"))
+```
+
+**Ejercicio:** Divídanse por equipos. Escriban una función que corra desde la función `ecdf()` hasta crear la df de resultados (ie todo lo anterior menos los plots). Los argumentos deben ser: 
+* df con datos neturales, 
+* df con datos génicos y,
+* método con el que se quiere utilizar la función `p.adjust()`. 
+
+El output debe ser una df con los datos génicos originales más dos columas con el pval y el pval ajustado. 
+
+La función debe escribirse en un archivo de R independiente para podarla llamar con `source()`. No olvides documentarla al inicio (qué hace la función, cuáles son sus argumentos) y comentar cada paso. Los comentarios deben ser en inglés.
+
+
+
+
+
+
+
+
