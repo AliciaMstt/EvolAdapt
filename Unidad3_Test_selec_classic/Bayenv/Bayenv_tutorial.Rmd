@@ -1,0 +1,145 @@
+---
+title: "Preparando el input de Bayenv2"
+output: html_document
+---
+
+Los loci involucrados en adaptación local pueden potencialmente identificarse encontrando una correlación entre frecuencias alélicas y variables ecológicas, o por diferencias extremas en las frecuencia alélicas entre regiones geográficas. 
+
+[Bayenv2](https://gcbias.org/bayenv/) es un software que compara las frecuencias alélicas y variables ambientales siguiendo un método bayesiano, que toma en cuenta la distribución esperada por efectos neutrales.
+
+Puedes [descargar el software y su manual aquí](https://bitbucket.org/tguenther/bayenv2_public/downloads/).
+
+
+En esta práctica vamos a entender el input y output de Bayenv utilizando como ejemplo el artículo de los lobos Schweizer et al (2015).
+
+Referencias:
+
+Using Environmental Correlations to Identify Loci Underlying Local Adaptation. Coop G., Witonsky D., Di Rienzo A., Pritchard J.K. Genetics. 2010
+
+and
+
+Robust identification of local adaptation from allele frequencies. Günther T., Coop G. Genetics. 2013
+
+
+Schweizer, R.M., Robinson, J., Harrigan, R., Silva, P., Galverni, M., Musiani, M., Green, R.E., Novembre, J. and Wayne, R.K. (2016), Targeted capture and resequencing of 1040 genes reveal environmentally driven functional variation in grey wolves. Mol Ecol, 25: 357-379. https://doi.org/10.1111/mec.13467
+
+[Un buen tutorial corriendo Bayenv2 paso a paso](https://eead-csic-compbio.github.io/barley-agroclimatic-association/HOWTOsnps.html)
+
+
+## Entendiendo el input de Bayenv2
+
+El input de Bayenv2 es el siguiente, asumiendo que trabajarás con muestras que fueron genotificadas individualmente (en vez de un pool):
+
+**SNPSFILE** y **SNPFILE**: contienen las frecuencias alélicas dentro de las poblaciones para cada SNP. Ver manual para detalles de formato. Para tener el formato adecuado lo más fácil es convertir de vcf al formato esperado por Bayenv2 utilizando [PDGSpider](http://www.cmpg.unibe.ch/software/PGDSpider/).
+
+
+
+**ENVIRONFILE** contiene las variables ambientales para las que desea estimar la correlación. Cada variable ambiental debe estandarizarse, es decir, restar la media y luego dividirla por la desviación estándar de la variable entre las poblaciones (detalles abajo). Cada línea del archivo es una variable ambiental. Las variables deben estar en el mismo orden de las poblaciones en el que aparecen en los archivos de SNPs.
+
+**MATRIXFILE** es la matriz de covarianza única. Esto se puede obtener copiando y pegando la última matriz impresa de la salida de correr el primer paso de BayeScan. 
+
+A continuación encontrarás extractos de los métodos del artículo de los lobos y comentarios para entenderlo mejor:
+
+**Extracto de los métodos del artículo**
+
+*To understand the effect of varying environments on variation in allele frequencies across North American wolf ecotypes, we implemented BAYENV (Coop et al. 2010). With BAYENV, we measured the support for a model in which SNPs covary linearly with an environmental variable over a model in which SNPs vary according to neutral expectation (Coop et al. 2010).* 
+
+**Comentarios**
+
+El artículo se realizó con la versión original de Bayenv (2010). Si lo quieres utilizar, es mejor usar el nuevo Bayenv2 (2013).
+
+**Extracto de los métodos del artículo**
+
+*We randomly picked 10 000 variants from our neutral region SNP set to generate a covariance matrix...* 
+
+**Comentarios**
+
+Tomaron 10,000 variantes al azar ya que la documentación de Bayenv2 aclara que "estimating the covariance matrix takes a time approximately linear in the number of SNPs used, thus if you are analyzing a very large data set you will probably want to estimate the matrix for a randomly chosen subset of the data. In general we have found that given a large number of SNPs (e.g. thousands) the program converges relatively quickly to a small set of very similar covariance matrices". 
+
+Para escoger los 10,000 variantes al azar, puedes:
+
+**Usando VCF**: extraer los ids de los SNPs del VCF y seleccionar 10,000 al azar (con R o excel), ya que tengas esta lista puedes utilizarla con el argumento `--snps` de [vcftools](https://vcftools.github.io/man_latest.html#SITE%20FILTERING%20OPTIONS) para producir un nuevo archivo vcf que contenga solo esos SNPs.
+
+o
+
+**Usando plink:** convertir el vcf a plink (bed) y utilizar el (argumento `--thin`)[https://zzz.bwh.harvard.edu/plink/dataman.shtml#snplist] para conservar al azar solo un % de lo SNPs originales.
+
+
+**Ejercicio** utiliza cualquiera de los dos métodos anterioes y el archivo vcf del artículo de los lobos para hacer un subset de 10,000 SNPs. Puedes descargar el vcf de los lobos [aquí](http://dx.doi.org/10.5061/dryad.8g0s3). Es el archivo en la sección "Variant file in VCF format". Al bajarlo, recomienod guardarlo con el nombre wolves.vcf en vez del nombre largo que trae originalmente. Cuando ya tengas el archivo con el subset de 10,000 SNPs, utiliza PDGSpider para convertirlo al archivo de SNPs de Bayenv. Guárdalo como `wolves.tsv`.
+
+**Extracto de los métodos del artículo**
+
+*We randomly picked 10 000 variants from our neutral region SNP set to generate a covariance matrix from the average of every 20 000th iteration over a total of 500 000 iterations.* 
+
+**Comentarios**
+
+Según el manual, la línea de comando (bash) para estimar la matriz es:
+
+```{bash, eval=FALSE}
+# Outputs the current draw of the covariance matrix into matrix.out
+./bayenv2 -i SNPSFILE -p NUMPOPS -k 100000 -r 63479 > matrix.out
+```
+
+`-i` es el archivo input de los SNPs
+`-p` es el número de poblaciones
+`-k` es el número de iteraciones
+`r` es una "raiz", puede ser cualquier número. Se utiliza para hacer reproducible el análisis (bayesian stuff).
+
+**Ejercicio** escribe la línea de comando que habría que utilizar según los métodos del artículo de los lobos. Asume que el archivo input se llama `wolves.tsv`.
+
+```{bash, eval=FALSE, echo=FALSE}
+# Outputs the current draw of the covariance matrix into matrix.out
+./bayenv2 -i wolves.tsv -p 5 -k 500000 -r 63479 > matrix.out
+# p =5 porque son 5 ecotipos en el artículo de los lobos
+```
+
+
+**Extracto de los métodos del artículo**
+
+*For each genic SNP, the selection mode of BAYENV was run with 100 000 iterations and 12 environmental variables previously shown to be influential in wolf ecotype differentiation (Schweizer et al. 2015). The 12 variables were obtained from the WORLDCLIM database (Hijmans et al. 2005), normalized as previously described (Coop et al. 2010; Schweizer et al. 2015)* 
+
+**Comentarios**
+
+Previo a correr Bayenv:
+
+1) bajaron los datos ambientales como **rasters** de [WorldClim](https://worldclim.org/data/worldclim21.html). 
+
+2) Recortaron los datos del mundo a la parte de Canadá y USA donde caen sus muestras (porque si no es un archivo enorme). Esto se puede hacer con el paquete `raster` o `terra` dentro de R.
+
+3) Para cada localidad de muestreo, obtuvieron el valor de la celda de cada raster ambiental en el que cae. Esto suena complicado pero se puede hacer muy fácil desde R. [Aquí un tutorial](https://rspatial.org/terra/sdm/4_sdm_envdata.html). Nota que las capas de WorldClim también pueden descargarse directamente con el paquete `predicts`. Con esto posteriormente sacaron un valor único para cada población. Eg. temperatura media.
+
+4) Una vez que tenían los datos ambientales por población, los estandarizaron para cada variable (restar la media y dividir entre su desviación estandar a lo largo de todas las poblaciones).
+
+El resultado lo guardaron en un archivo de texto, que imaginemos se llama `envdata.tsv`
+
+Posteriormene corrieron Bayenv2, con algo como:
+
+```{bash, eval=FALSE}
+./bayenv2 -i wolves.tsv -m matrix.out -e envdata.tsv -p 5 -k 100000 -n 12 -t -r 429
+```
+
+`-i` es el archivo
+`-n` número de variables ambientales
+`-t` indicaa modo 'rest' mode, para asegurar que los factores Bayes se calculen para cada SNP.
+`-r` es la raíz de los números al azar que ocupan los métodos bayesianos.
+
+
+**Extracto de los métodos del artículo**
+
+*The final matrix of Bayes factors (BFs) was obtained by averaging each BF over a total of 10 independent runs to help control for sensitivity of MCMC sampling methods (Coop et al. 2010; Blair et al. 2014). The same procedure was done for a set of 15 000 random variants from the neutral nongenic sequence to further control for background demo- graphic patterns.*
+
+**Comentarios**
+
+El resultado de este promedio de 10 corridas son los archivos que subieron al Dryad con el nombre `bayenv1_output_n107_k6_Average_10Runs_forR.txt` y `bayenv1_output_n107_k6_Average_10Runs_NEUTRAL_forR.txt`. Puedes descargarlos [aquí](https://datadryad.org/stash/dataset/doi:10.5061/dryad.8g0s3)
+
+
+**Extracto de los métodos del artículo**
+
+*We assigned an empirical P-value within R to the log10 BF of each genic variant using the neutral distribution. This approach has been shown to reduce falsely elevated BFs that may occur given the pure drift null model inherent within BAYENV (Coop et al. 2010; Hancock et al. 2010; Chen et al. 2012a; Lotter- hos & Whitlock 2014). Variants with a BH-corrected FDR ≤ 0.05 were highlighted as having additional support of being selection candidates.*
+
+**Comentarios**
+
+Examina el output de los lobos y discute cómo hicieron este último paso.
+
+
+
