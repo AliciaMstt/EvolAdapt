@@ -111,14 +111,14 @@ Primero calculamos la función ECDF con los datos neutrales
 
 ```{r}
 # estimate the empirical cumulative distribution functione with neutral data
-Likelihood_Function <- ecdf(wolves_neutral$prob)
+Likelihood_Function <- ecdf(wolves_neutral$alpha)
 ```
 
 Después evaluamos esa función con los datos genéticos:
 
 ```{r}
 # run function
-x<-Likelihood_Function(wolves_genic$prob)
+x<-Likelihood_Function(wolves_genic$alpha)
 
 # check results
 head(x)
@@ -181,7 +181,8 @@ ggplot(results, aes(x=bayescan_number, y=alpha)) +
   scale_color_manual(values = c("black", "red"))
 ```
 
-**Ejercicio:** Divídanse por equipos. Escriban una función que corra desde la función `ecdf()` hasta crear la df de resultados (ie todo lo anterior menos los plots). Los argumentos deben ser: 
+**Ejercicio:** Divídanse por equipos. Escriban una función que corra desde la función `ecdf()` hasta crear la df de resultados (ie todo lo anterior menos los plots). Los argumentos mínimos deben ser: 
+
 * df con datos neturales, 
 * df con datos génicos y,
 * método con el que se quiere utilizar la función `p.adjust()`. 
@@ -190,9 +191,36 @@ El output debe ser una df con los datos génicos originales más dos columas con
 
 La función debe escribirse en un archivo de R independiente para podarla llamar con `source()`. No olvides documentarla al inicio (qué hace la función, cuáles son sus argumentos) y comentar cada paso. Los comentarios deben ser en inglés.
 
+#### Ejercicio resuelto:
+
+Puedes ver un ejemplo de la función en en el script [outliers_pval.R](outliers_pval.R).
+
+Para cargarla dentro de tu script de R:
+
+```{r}
+source("outliers_pval.R")
+```
+
+Y luego puede correrse así para los datos de BayeScan:
+
+```{r}
+# Load Bayescan output data
+
+wolves_genic<-read.csv("../data/bayescan_n107_Ecotypes_GenicRegions_95CallRate_wEcotypes_output_prior_odds_1000_fst.txt", 
+                         sep="", header= FALSE,
+                         col.names = c("bayescan_number", "prob",   "log10(PO)", "qval", "alpha", "fst"))
+
+wolves_neutral<-read.csv("../data/bayescan_n107_NeutralRegions_95CallRate_LDpruned_output_prior_odds_10000_fst.txt", 
+                         sep="", header= FALSE,
+                         col.names = c("bayescan_number", "prob",   "log10(PO)", "qval", "alpha", "fst"))
+
+# Get pvalues
+outliers_pval(neutraldata=wolves_neutral, genicdata = wolves_genic,
+              desiredcolumn = 5, #alpha is the 5th column
+              method= "BH")
 
 
-
+```
 
 
 
