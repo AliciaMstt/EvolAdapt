@@ -28,9 +28,11 @@ Notas de este repositorio:
 * Práctica procesar el output de SweeD. [Versión html](Unidad3_Test_selec_classic/SweeD_pvalues.html) y [versión código Rmd](Unidad3_Test_selec_classic/SweeD_pvalues.Rmd)
 * Práctica BayeScan. [Versión html](Unidad3_Test_selec_classic/Bayescan/bin/BayeScan_explore_results.html) y [Versión código Rmd](Unidad3_Test_selec_classic/Bayescan/bin/BayeScan_explore_results.Rmd)
 * Práctica input Bayenv [Versión html](Unidad3_Test_selec_classic/Bayenv/Bayenv_tutorial.html)  y [Versión código Rmd](Unidad3_Test_selec_classic/Bayenv/Bayenv_tutorial.Rmd)
+* Validación de candidatos mediante RNAseq. [Tutorial de expresión diferencial cortesía de Rodolfo Chávez](https://necrosnake91.github.io/Tutorial_of_RNA_seq/) 
 
 
 ## 4 Proyectos bioinformáticos
 
 * [Organización de un proyecto bioinformático](Unidad4_ProyectoBioinfo/Organizacion_proyecto.md)
 * [git y GitHub](Unidad4_ProyectoBioinfo/Git_github.md)
+
